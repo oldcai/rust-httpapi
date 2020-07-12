@@ -1,6 +1,6 @@
 extern crate actix_web;
 
-use actix_web::{web, App, HttpRequest, Responder, HttpServer};
+use actix_web::{web, App, HttpRequest, HttpServer, Responder};
 use clap::Arg;
 
 async fn index(_req: HttpRequest) -> impl Responder {
@@ -26,8 +26,7 @@ async fn main() -> std::io::Result<()> {
             .route("/", web::get().to(index))
             .route("/ip", web::get().to(index))
     })
-        .bind(listen_addr)?
-        .run()
-        .await
+    .bind(listen_addr)?
+    .run()
+    .await
 }
-

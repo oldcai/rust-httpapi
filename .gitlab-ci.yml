@@ -1,27 +1,110 @@
-image: library/rust:1.44.1-alpine
-
-cargo-build:
-  stage: build
-  script:
-    - cargo build --release
-  artifacts:
+.caching_rust: &caching_rust
+  cache:
     paths:
-      - Cargo.lock
-      - target/
-    expire_in: 1y
+      - .cache/sccache #the building shared cache
+      # caching relevant part inside CARGO_HOME (cf https://doc.rust-lang.org/cargo/guide/cargo-home.html#caching-the-cargo-home-in-ci)
+      - .cargo/bin
+      - .cargo/registry/index
+      - .cargo/registry/cache
+      - .cargo/git/db
 
-cargo-test:
+stages:
+  - check
+  - build
+  - test
+  - publish
+  - deploy
+
+variables:
+  BUILD_ARTIFACT: httpapi
+  BUILDER: ekidd/rust-musl-builder:1.44.1
+  IMAGE: ${CI_REGISTRY_IMAGE}
+  TAG: ${CI_COMMIT_REF_SLUG} #Will be branch name or tag name
+  # speeding up those dind
+  DOCKER_DRIVER: overlay2
+
+check:
+  stage: check
+  image: ${BUILDER}
+  <<: *caching_rust
+  before_script:
+    - export CARGO_HOME="${PWD}/.cargo"
+    - echo $CARGO_HOME
+    - export SCCACHE_DIR="${PWD}/.cache/sccache"
+    - echo $SCCACHE_DIR
+    - export RUSTC_WRAPPER="$(whereis cargo | cut -d ' ' -f 2)/bin/sccache"
+    - echo $RUSTC_WRAPPER
+  script:
+    - cargo check
+    - $RUSTC_WRAPPER --show-stats
+  except:
+    - tags
+
+test:
   stage: test
-  dependencies:
-    - cargo-build
+  image: ${BUILDER}
+  <<: *caching_rust
+  before_script:
+    - export CARGO_HOME="${PWD}/.cargo"
+    - echo $CARGO_HOME
+    - export SCCACHE_DIR="${PWD}/.cache/sccache"
+    - echo $SCCACHE_DIR
+    - export RUSTC_WRAPPER="$(whereis cargo | cut -d ' ' -f 2)/bin/sccache"
+    - echo $RUSTC_WRAPPER
   script:
     - cargo test
+    - $RUSTC_WRAPPER --show-stats
 
-cargo-fmt:
-  stage: test
-  dependencies:
-    - cargo-build
+build:
+  stage: build
+  image: ${BUILDER}
+  <<: *caching_rust
+  before_script:
+    - export CARGO_HOME="${PWD}/.cargo"
+    - echo $CARGO_HOME
+    - export SCCACHE_DIR="${PWD}/.cache/sccache"
+    - echo $SCCACHE_DIR
+    - export RUSTC_WRAPPER="$(whereis cargo | cut -d ' ' -f 2)/bin/sccache"
+    - echo $RUSTC_WRAPPER
   script:
-    - rustup component add rustfmt
-    - cargo fmt -- --check
-  allow_failure: true
+    - cargo build --release
+    - $RUSTC_WRAPPER --show-stats
+    - cp target/release/${BUILD_ARTIFACT} ${BUILD_ARTIFACT}
+  artifacts:
+    paths:
+      - ${BUILD_ARTIFACT}
+  only:
+    - tags
+
+publish:
+  stage: publish
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    # connect to gitlab image repository
+    - docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ${CI_REGISTRY}
+  script:
+    # thanks to artifacts, binary is present in pwd here
+    - docker build --tag ${IMAGE}:${TAG} --tag ${IMAGE}:latest .
+    - docker push ${IMAGE}
+  only:
+    - tags
+
+deploy-staging:
+  stage: deploy
+  script:
+    - echo "deploying in staging env"
+  only:
+    - tags
+  when: manual
+
+deploy-prod:
+  stage: deploy
+  script:
+    - echo "deploying in prod env"
+  only:
+    - tags
+  except:
+    - branches
+  when: manual
