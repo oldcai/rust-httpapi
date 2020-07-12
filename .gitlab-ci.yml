@@ -49,7 +49,7 @@ test:
     - echo $CARGO_HOME
     - export SCCACHE_DIR="${PWD}/.cache/sccache"
     - echo $SCCACHE_DIR
-    - export RUSTC_WRAPPER="$(whereis cargo | cut -d ' ' -f 2)/bin/sccache"
+    - export RUSTC_WRAPPER="$(dirname $(whereis cargo | cut -d ' ' -f 2))/sccache"
     - echo $RUSTC_WRAPPER
   script:
     - cargo test
