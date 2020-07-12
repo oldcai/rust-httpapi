@@ -17,7 +17,7 @@ stages:
 
 variables:
   BUILD_ARTIFACT: httpapi
-  BUILDER: ekidd/rust-musl-builder:1.44.1
+  BUILDER: oldcai/rust-musl-builder:latest
   IMAGE: ${CI_REGISTRY_IMAGE}
   TAG: ${CI_COMMIT_REF_SLUG} #Will be branch name or tag name
   # speeding up those dind
@@ -32,7 +32,7 @@ check:
     - echo $CARGO_HOME
     - export SCCACHE_DIR="${PWD}/.cache/sccache"
     - echo $SCCACHE_DIR
-    - export RUSTC_WRAPPER="$(whereis cargo | cut -d ' ' -f 2)/bin/sccache"
+    - export RUSTC_WRAPPER="$(dirname $(whereis cargo | cut -d ' ' -f 2))/sccache"
     - echo $RUSTC_WRAPPER
   script:
     - cargo check
@@ -64,7 +64,7 @@ build:
     - echo $CARGO_HOME
     - export SCCACHE_DIR="${PWD}/.cache/sccache"
     - echo $SCCACHE_DIR
-    - export RUSTC_WRAPPER="$(whereis cargo | cut -d ' ' -f 2)/bin/sccache"
+    - export RUSTC_WRAPPER="$(dirname $(whereis cargo | cut -d ' ' -f 2))/sccache"
     - echo $RUSTC_WRAPPER
   script:
     - cargo build --release
