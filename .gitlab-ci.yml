@@ -67,7 +67,8 @@ build:
     - export RUSTC_WRAPPER="$(dirname $(whereis cargo | cut -d ' ' -f 2))/sccache"
     - echo $RUSTC_WRAPPER
   script:
-    - cargo build --release
+    #- cargo build --release
+    - RUST_BACKTRACE=full cargo run
     - $RUSTC_WRAPPER --show-stats
     - cp target/release/${BUILD_ARTIFACT} ${BUILD_ARTIFACT}
   artifacts:
