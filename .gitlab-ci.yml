@@ -1,0 +1,27 @@
+image: library/rust:1.44.1-alpine
+
+cargo-build:
+  stage: build
+  script:
+    - cargo build --release
+  artifacts:
+    paths:
+      - Cargo.lock
+      - target/
+    expire_in: 1y
+
+cargo-test:
+  stage: test
+  dependencies:
+    - cargo-build
+  script:
+    - cargo test
+
+cargo-fmt:
+  stage: test
+  dependencies:
+    - cargo-build
+  script:
+    - rustup component add rustfmt
+    - cargo fmt -- --check
+  allow_failure: true
