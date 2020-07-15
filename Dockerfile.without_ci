@@ -1,4 +1,4 @@
-FROM oldcai/rust-musl-builder:latest as build
+FROM mirror.ccs.tencentyun.com/oldcai/rust-musl-builder:latest as build
 ADD . /home/rust/src
 WORKDIR /home/rust/src
 
