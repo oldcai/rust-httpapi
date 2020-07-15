@@ -1,0 +1,24 @@
+stages:
+- name: Containerize
+  steps:
+  - publishImageConfig:
+      dockerfilePath: ./Dockerfile.without_ci
+      buildContext: .
+      tag: httpapi-${CICD_GIT_BRANCH}:${CICD_EXECUTION_SEQUENCE}-${CICD_GIT_COMMIT}
+    env:
+      PLUGIN_DEBUG: "true"
+      PLUGIN_INSECURE: "true"
+- name: Deploy
+  steps:
+  - applyYamlConfig:
+      path: ./deployment.yaml
+timeout: 60
+notification:
+  recipients:
+  - recipient: '#general'
+    notifier: c-44fzn:n-s8hsx
+  condition:
+  - Success
+  - Changed
+  - Failed
+
