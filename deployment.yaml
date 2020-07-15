@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpapi
+  namespace: shangkeya
+  labels:
+    app: httpapi
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: httpapi
+  template:
+    metadata:
+      labels:
+        app: httpapi
+    spec:
+      imagePullSecrets:
+        - name: pipeline-docker-registry
+      containers:
+        - name: httpapi
+          image: ${CICD_IMAGE}:${CICD_EXECUTION_SEQUENCE}-${CICD_GIT_COMMIT}
+          ports:
+            - containerPort: 80
+
+

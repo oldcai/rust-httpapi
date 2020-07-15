@@ -12,4 +12,4 @@ FROM alpine:latest
 WORKDIR /web/
 COPY --from=0 /home/rust/src/target/x86_64-unknown-linux-musl/release/httpapi /web/
 
-CMD ["./httpapi", "0.0.0.0:8000"]
+CMD ["./httpapi", "0.0.0.0:80"]
