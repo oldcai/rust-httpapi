@@ -1,4 +1,4 @@
-FROM ekidd/rust-musl-builder:1.44.1 as build
+FROM oldcai/rust-musl-builder:latest as build
 ADD . /home/rust/src
 WORKDIR /home/rust/src
 
@@ -10,6 +10,6 @@ RUN cargo build --release
 FROM alpine:latest
 
 WORKDIR /web/
-COPY --from=0 /home/rust/src/target/x86_64-unknown-linux-musl/release/httpapi /web/
+COPY --from=build /home/rust/src/target/x86_64-unknown-linux-musl/release/httpapi /web/
 
 CMD ["./httpapi", "0.0.0.0:80"]
