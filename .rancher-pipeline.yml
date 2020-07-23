@@ -2,7 +2,7 @@ stages:
 - name: Containerize
   steps:
   - publishImageConfig:
-      dockerfilePath: ./Dockerfile.without_ci
+      dockerfilePath: ./Dockerfile
       buildContext: .
       tag: httpapi-${CICD_GIT_BRANCH}:${CICD_EXECUTION_SEQUENCE}-${CICD_GIT_COMMIT}
     env:
